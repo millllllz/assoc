@@ -1,0 +1,26 @@
+<h1>Listing User locations</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Display order</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for user_location <- @user_locations do %>
+    <tr>
+      <td><%= user_location.display_order %></td>
+
+      <td>
+        <span><%= link "Show", to: Routes.user_location_path(@conn, :show, user_location) %></span>
+        <span><%= link "Edit", to: Routes.user_location_path(@conn, :edit, user_location) %></span>
+        <span><%= link "Delete", to: Routes.user_location_path(@conn, :delete, user_location), method: :delete, data: [confirm: "Are you sure?"] %></span>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>
+
+<span><%= link "New User location", to: Routes.user_location_path(@conn, :new) %></span>

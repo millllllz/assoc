@@ -1,0 +1,5 @@
+<h1>Edit User location</h1>
+
+<%= render "form.html", Map.put(assigns, :action, Routes.user_location_path(@conn, :update, @user_location)) %>
+
+<span><%= link "Back", to: Routes.user_location_path(@conn, :index) %></span>
