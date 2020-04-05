@@ -7,6 +7,7 @@ defmodule Assoc.Users do
   alias Assoc.Repo
 
   alias Assoc.Users.User
+  alias Assoc.Users.UserRole
 
   @doc """
   Returns the list of users.
@@ -52,6 +53,7 @@ defmodule Assoc.Users do
   def create_user(attrs \\ %{}) do
     %User{}
     |> User.changeset(attrs)
+    |> put_roles(attrs)
     |> Repo.insert()
   end
 
@@ -69,8 +71,28 @@ defmodule Assoc.Users do
   """
   def update_user(%User{} = user, attrs) do
     user
+    |> Repo.preload(:roles)
     |> User.changeset(attrs)
+    |> put_roles(attrs)
     |> Repo.update()
+  end
+
+  defp put_roles(changeset, attrs) do
+    {_, roles} =
+      attrs
+      |> Map.get("user_roles")
+      |> Map.values()
+      |> Enum.map_reduce([], fn admin_role, acc ->
+        case admin_role do
+          %{"role_id" => "false"} ->
+            {nil, acc}
+
+          %{"role_id" => role_id} ->
+            {nil, acc ++ [Assoc.Roles.get_role!(role_id)]}
+        end
+      end)
+
+    Ecto.Changeset.put_assoc(changeset, :roles, roles)
   end
 
   @doc """
@@ -99,6 +121,25 @@ defmodule Assoc.Users do
 
   """
   def change_user(%User{} = user) do
-    User.changeset(user, %{})
+    user
+    |> Repo.preload(:roles)
+    |> add_roles_to_changeset()
+    |> User.changeset(%{})
+  end
+
+  defp add_roles_to_changeset(user) do
+    all_roles = Assoc.Roles.list_roles()
+    all_user_roles = user.roles
+
+    user_roles =
+      Enum.map(all_roles, fn role ->
+        if Enum.member?(all_user_roles, role) do
+          %UserRole{user: user, role: role}
+        else
+          %UserRole{user: nil, role: role}
+        end
+      end)
+
+    %{user | user_roles: user_roles}
   end
 end

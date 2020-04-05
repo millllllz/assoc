@@ -5,6 +5,9 @@ defmodule Assoc.Users.User do
   schema "users" do
     field :name, :string
 
+    has_many(:user_roles, Assoc.Users.UserRole)
+    many_to_many(:roles, Assoc.Roles.Role, join_through: "user_roles", on_replace: :delete)
+
     timestamps()
   end
 
