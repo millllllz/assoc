@@ -8,6 +8,7 @@ defmodule Assoc.Users do
 
   alias Assoc.Users.User
   alias Assoc.Users.UserRole
+  alias Assoc.UserLocations.UserLocation
 
   @doc """
   Returns the list of users.
@@ -72,6 +73,8 @@ defmodule Assoc.Users do
   def update_user(%User{} = user, attrs) do
     user
     |> Repo.preload(:roles)
+    |> Repo.preload(:user_roles)
+    |> Repo.preload(user_locations: :location)
     |> User.changeset(attrs)
     |> put_roles(attrs)
     |> Repo.update()
@@ -84,7 +87,7 @@ defmodule Assoc.Users do
       |> Map.values()
       |> Enum.map_reduce([], fn admin_role, acc ->
         case admin_role do
-          %{"role_id" => "false"} ->
+          %{"role_id" => ""} ->
             {nil, acc}
 
           %{"role_id" => role_id} ->
@@ -123,7 +126,9 @@ defmodule Assoc.Users do
   def change_user(%User{} = user) do
     user
     |> Repo.preload(:roles)
+    |> Repo.preload(user_locations: :location)
     |> add_roles_to_changeset()
+    |> add_locations_to_changeset()
     |> User.changeset(%{})
   end
 
@@ -141,5 +146,23 @@ defmodule Assoc.Users do
       end)
 
     %{user | user_roles: user_roles}
+  end
+
+  defp add_locations_to_changeset(user) do
+    all_locations = Assoc.Locations.list_locations()
+    all_user_locations = user.user_locations
+
+    user_locations =
+      Enum.map(all_locations, fn location ->
+        user_location = Enum.find(all_user_locations, fn ul -> ul.location == location end)
+
+        if user_location do
+          user_location
+        else
+          %UserLocation{user: nil, location: location, display_order: nil}
+        end
+      end)
+
+    %{user | user_locations: user_locations}
   end
 end

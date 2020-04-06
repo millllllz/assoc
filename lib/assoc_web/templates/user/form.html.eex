@@ -9,10 +9,27 @@
   <%= text_input f, :name %>
   <%= error_tag f, :name %>
 
+  <h2>Roles</h2>
   <%= inputs_for(f, :user_roles, fn r -> %>
-    <%= checkbox(r, :role_id, checked_value: r.data.role.id, checked: !is_nil(r.data.user)) %>
+    <%= checkbox(r, :role_id, checked: !is_nil(r.data.user), checked_value: r.data.role.id, unchecked_value: nil) %>
     <%= r.data.role.name %>
     (#<%= r.data.role.id %>)
+    <br>
+  <% end) %>
+
+  <h2>Locations</h2>
+  <%= inputs_for(f, :user_locations, fn l -> %>
+    <%= hidden_input(l, :location_id, value: l.data.location.id) %>
+    <%= if is_nil(l.data.user) do %>
+    checked_value: :insert, unchecked_value: :ignore
+      <%= checkbox(l, :action, checked: false, checked_value: :insert, unchecked_value: :ignore) %>
+    <% else %>
+    checked_value: :update, unchecked_value: :delete
+      <%= checkbox(l, :action, checked: true, checked_value: :update, unchecked_value: :delete) %>
+    <% end %>
+    <%= text_input(l, :display_order) %>
+    <%= l.data.location.name %>
+    (#<%= l.data.location.id %>)
     <br>
   <% end) %>
 
